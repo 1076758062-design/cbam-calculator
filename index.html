@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CBAM碳关税计算器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0D9488;
+      --primary-dark: #0F766E;
+      --accent: #F59E0B;
+      --bg: #0F172A;
+      --bg-card: #1E293B;
+      --bg-input: #334155;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #475569;
+      --danger: #EF4444;
+      --success: #22C55E;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+      padding-bottom: 80px;
+    }
+
+    .header {
+      text-align: center;
+      padding: 24px 0 32px;
+    }
+
+    .header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .toggle-group {
+      display: flex;
+      background: var(--bg-input);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-calculate {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-calculate:active {
+      transform: scale(0.98);
+    }
+
+    .btn-calculate:hover {
+      box-shadow: 0 8px 24px rgba(13, 148, 136, 0.3);
+    }
+
+    .result-card {
+      background: linear-gradient(135deg, rgba(13, 148, 136, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+      border: 1px solid var(--primary);
+      display: none;
+    }
+
+    .result-card.show {
+      display: block;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-label {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .result-value {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .result-value.highlight {
+      color: var(--accent);
+      font-size: 24px;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .product-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .product-item {
+      padding: 12px;
+      background: var(--bg-input);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .product-item:hover {
+      background: var(--border);
+    }
+
+    .product-item.selected {
+      border: 1px solid var(--primary);
+    }
+
+    .product-code {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .product-name {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-input);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .history-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .history-amount {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .price-chart {
+      height: 120px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 16px 0;
+    }
+
+    .price-bar {
+      flex: 1;
+      background: linear-gradient(to top, var(--primary), var(--accent));
+      border-radius: 4px 4px 0 0;
+      min-height: 20px;
+      position: relative;
+      transition: height 0.5s ease;
+    }
+
+    .price-bar::after {
+      content: attr(data-price);
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .btn-delete {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .helper-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>CBAM碳关税计算器</h1>
+    <p>欧盟碳边境调节机制 · 快速计算</p>
+  </div>
+
+  <!-- 计算器页面 -->
+  <div id="page-calculator" class="page active">
+    <div class="card">
+      <div class="card-title">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+        产品信息
+      </div>
+      
+      <div class="form-group">
+        <label>CN编码（HS Code）</label>
+        <input type="text" id="cnCode" placeholder="输入4/6/8位编码搜索，如 2809">
+        <div class="product-list" id="productResults"></div>
+      </div>
+
+      <div class="form-group">
+        <label>原产国</label>
+        <select id="originCountry">
+          <option value="CN">中国</option>
+          <option value="US">美国</option>
+          <option value="JP">日本</option>
+          <option value="KR">韩国</option>
+          <option value="IN">印度</option>
+          <option value="RU">俄罗斯</option>
+          <option value="BR">巴西</option>
+          <option value="TR">土耳其</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        出口信息
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label>出口日期</label>
+          <input type="date" id="exportDate">
+        </div>
+        <div class="form-group">
+          <label>出口数量（吨）</label>
+          <input type="number" id="quantity" placeholder="如：100">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>计算方式</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-value="default" onclick="setCalcMethod('default')">默认值计算</button>
+          <button class="toggle-btn" data-value="actual" onclick="setCalcMethod('actual')">实测值计算</button>
+        </div>
+      </div>
+
+      <div id="defaultFields">
+        <div class="form-group">
+          <label>已支付碳成本（欧元）</label>
+          <input type="number" id="carbonCost" placeholder="如：500">
+          <div class="helper-text">产品在本国已支付的碳排放成本，不填则默认为0</div>
+        </div>
+      </div>
+
+      <div id="actualFields" style="display: none;">
+        <div class="form-group">
+          <label>隐含碳排放（吨CO₂）</label>
+          <input type="number" id="embeddedEmission" placeholder="如：85">
+        </div>
+        <div class="form-group">
+          <label>累计前体配额（吨CO₂）</label>
+          <input type="number" id="freeAllocation" placeholder="如：20">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-calculate" onclick="calculate()">计算碳关税</button>
+
+    <div class="card result-card" id="resultCard">
+      <div class="card-title">计算结果</div>
+      <div class="result-item">
+        <span class="result-label">证书价格</span>
+        <span class="result-value" id="certPrice">—</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">默认值/隐含排放</span>
+        <span class="result-value" id="emissionValue">—</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">免费配额</span>
+        <span class="result-value" id="freeQuota">—</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">应缴碳关税</span>
+        <span class="result-value highlight" id="totalTax">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 产品查询页面 -->
+  <div id="page-query" class="page">
+    <div class="card">
+      <div class="card-title">产品查询</div>
+      <div class="form-group">
+        <input type="text" id="searchCode" placeholder="输入CN编码或产品名称搜索">
+      </div>
+      <div id="queryResults"></div>
+    </div>
+  </div>
+
+  <!-- 碳价页面 -->
+  <div id="page-price" class="page">
+    <div class="card">
+      <div class="card-title">CBAM证书价格走势（近7周）</div>
+      <div class="price-chart" id="priceChart"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">当前价格</div>
+      <div class="result-item">
+        <span class="result-label">最新碳价</span>
+        <span class="result-value highlight" id="currentPrice">€78.45</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">数据来源</span>
+        <span class="result-value">欧盟能源交易所</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 历史记录页面 -->
+  <div id="page-history" class="page">
+    <div class="card">
+      <div class="card-title">历史计算记录</div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <nav class="nav">
+    <div class="nav-item active" onclick="switchPage('calculator')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+      <span>计算器</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('query')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span>产品查询</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('price')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      <span>碳价</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('history')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>记录</span>
+    </div>
+  </nav>
+
+  <script>
+    // 示例CBAM产品数据
+    const cbamProducts = [
+      { code: '2809', name: '硅', defaultEmission: 2.15, benchmark: 1.85 },
+      { code: '2810', name: '硼', defaultEmission: 1.92, benchmark: 1.65 },
+      { code: '2811', name: '其他非金属元素', defaultEmission: 1.78, benchmark: 1.52 },
+      { code: '7201', name: '生铁及镜铁', defaultEmission: 1.45, benchmark: 1.20 },
+      { code: '7202', name: '铁合金', defaultEmission: 2.35, benchmark: 1.95 },
+      { code: '7203', name: '直接从还原所得的铁产品', defaultEmission: 1.65, benchmark: 1.35 },
+      { code: '7204', name: '废碎料', defaultEmission: 0.85, benchmark: 0.65 },
+      { code: '7205', name: '生铁、镜铁及铁合金的颗粒', defaultEmission: 1.25, benchmark: 1.00 },
+      { code: '7206', name: '铁及非合金钢锭', defaultEmission: 1.55, benchmark: 1.25 },
+      { code: '7207', name: '铁及非合金钢半制品', defaultEmission: 1.42, benchmark: 1.15 },
+      { code: '7208', name: '宽度≥600mm的热轧铁及非合金钢平板', defaultEmission: 1.38, benchmark: 1.12 },
+      { code: '7209', name: '宽度≥600mm的冷轧铁及非合金钢平板', defaultEmission: 1.32, benchmark: 1.08 },
+      { code: '7210', name: '宽度≥600mm的镀、涂铁及非合金钢平板', defaultEmission: 1.45, benchmark: 1.18 },
+      { code: '7211', name: '宽度<600mm的铁及非合金钢平板', defaultEmission: 1.48, benchmark: 1.20 },
+      { code: '7212', name: '宽度<600mm的镀、涂铁及非合金钢平板', defaultEmission: 1.52, benchmark: 1.25 },
+      { code: '7213', name: '不规则盘卷的铁及非合金钢热轧条、杆', defaultEmission: 1.35, benchmark: 1.10 },
+      { code: '7214', name: '其他铁及非合金钢条、杆', defaultEmission: 1.40, benchmark: 1.12 },
+      { code: '7215', name: '铁及非合金钢其他条、杆', defaultEmission: 1.38, benchmark: 1.15 },
+      { code: '7216', name: '铁及非合金钢角材、型材及异型材', defaultEmission: 1.42, benchmark: 1.18 },
+      { code: '7217', name: '铁及非合金钢丝', defaultEmission: 1.55, benchmark: 1.28 },
+      { code: '7218', name: '不锈钢锭', defaultEmission: 2.85, benchmark: 2.35 },
+      { code: '7219', name: '宽度≥600mm的不锈钢平板', defaultEmission: 2.65, benchmark: 2.18 },
+      { code: '7220', name: '宽度<600mm的不锈钢平板', defaultEmission: 2.72, benchmark: 2.25 },
+      { code: '7221', name: '不规则盘卷的不锈钢热轧条、杆', defaultEmission: 2.58, benchmark: 2.12 },
+      { code: '7222', name: '不锈钢其他条、杆', defaultEmission: 2.62, benchmark: 2.15 },
+      { code: '7223', name: '不锈钢角材、型材及异型材', defaultEmission: 2.68, benchmark: 2.20 },
+      { code: '7224', name: '不锈钢丝', defaultEmission: 2.75, benchmark: 2.28 },
+      { code: '7601', name: '未锻轧铝', defaultEmission: 4.85, benchmark: 3.95 },
+      { code: '7602', name: '铝废碎料', defaultEmission: 0.95, benchmark: 0.75 },
+      { code: '7603', name: '铝粉及片状粉末', defaultEmission: 5.25, benchmark: 4.35 },
+      { code: '7604', name: '铝条、杆、型材及异型材', defaultEmission: 4.55, benchmark: 3.72 },
+      { code: '7605', name: '铝丝', defaultEmission: 4.68, benchmark: 3.85 },
+      { code: '7606', name: '宽度≥600mm的铝板、片及带', defaultEmission: 4.42, benchmark: 3.62 },
+      { code: '7607', name: '宽度<600mm的铝箔', defaultEmission: 4.85, benchmark: 3.98 },
+      { code: '7608', name: '铝管', defaultEmission: 4.72, benchmark: 3.88 },
+      { code: '7609', name: '铝制管子附件', defaultEmission: 4.95, benchmark: 4.08 },
+      { code: '2701', name: '煤', defaultEmission: 1.85, benchmark: 1.55 },
+      { code: '2702', name: '褐煤', defaultEmission: 1.42, benchmark: 1.18 },
+      { code: '2703', name: '泥煤', defaultEmission: 1.15, benchmark: 0.92 },
+      { code: '2704', name: '煤、褐煤或泥煤制成的焦炭', defaultEmission: 2.35, benchmark: 1.95 },
+      { code: '2705', name: '煤气', defaultEmission: 1.68, benchmark: 1.38 },
+      { code: '2706', name: '从煤、褐煤或泥煤蒸馏所得的焦油', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '2707', name: '蒸馏高温煤焦油所得的油类及其他产品', defaultEmission: 2.45, benchmark: 2.05 },
+      { code: '2708', name: '从煤焦油或其他矿物焦油所得的其他产品', defaultEmission: 2.28, benchmark: 1.88 },
+      { code: '2710', name: '石油及从沥青矿物提取的油类', defaultEmission: 0.85, benchmark: 0.68 },
+      { code: '2711', name: '石油气及其他烃类气', defaultEmission: 0.65, benchmark: 0.52 },
+      { code: '2712', name: '凡士林、石蜡、微晶石蜡等', defaultEmission: 0.95, benchmark: 0.75 },
+      { code: '2713', name: '石油焦、石油沥青及其他石油残渣', defaultEmission: 1.25, benchmark: 1.02 },
+      { code: '2714', name: '天然沥青、沥青页岩等', defaultEmission: 1.15, benchmark: 0.92 },
+      { code: '2716', name: '电力', defaultEmission: 0.45, benchmark: 0.35 },
+      { code: '2814', name: '氨', defaultEmission: 2.85, benchmark: 2.35 },
+      { code: '2815', name: '氢氧化钠', defaultEmission: 1.95, benchmark: 1.62 },
+      { code: '2816', name: '氢氧化钾', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '2817', name: '过氧化锌', defaultEmission: 2.35, benchmark: 1.95 },
+      { code: '2818', name: '人造刚玉', defaultEmission: 3.25, benchmark: 2.68 },
+      { code: '2819', name: '铬的氧化物及氢氧化物', defaultEmission: 2.55, benchmark: 2.12 },
+      { code: '2820', name: '锰的氧化物', defaultEmission: 2.35, benchmark: 1.95 },
+      { code: '2821', name: '铁的氧化物及氢氧化物', defaultEmission: 1.85, benchmark: 1.52 },
+      { code: '2822', name: '钴的氧化物及氢氧化物', defaultEmission: 3.45, benchmark: 2.85 },
+      { code: '2823', name: '钛的氧化物', defaultEmission: 3.85, benchmark: 3.18 },
+      { code: '2824', name: '铅的氧化物', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '2825', name: '肼、胺及其无机盐', defaultEmission: 2.65, benchmark: 2.18 },
+      { code: '2826', name: '氟化物、氟硅酸盐等', defaultEmission: 2.45, benchmark: 2.02 },
+      { code: '2827', name: '氯化物、氯氧化物等', defaultEmission: 1.95, benchmark: 1.62 },
+      { code: '2828', name: '次氯酸盐、亚氯酸盐等', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '2829', name: '氯酸盐、高氯酸盐等', defaultEmission: 2.35, benchmark: 1.95 },
+      { code: '2830', name: '硫化物、多硫化物', defaultEmission: 2.05, benchmark: 1.68 },
+      { code: '2831', name: '连二亚硫酸盐、次硫酸盐', defaultEmission: 2.25, benchmark: 1.85 },
+      { code: '2832', name: '亚硫酸盐、硫代硫酸盐', defaultEmission: 1.85, benchmark: 1.52 },
+      { code: '2833', name: '硫酸盐、矾、过氧硫酸盐', defaultEmission: 2.05, benchmark: 1.68 },
+      { code: '2834', name: '亚硝酸盐、硝酸盐', defaultEmission: 2.45, benchmark: 2.02 },
+      { code: '2835', name: '磷化物', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '2836', name: '碳酸盐、过碳酸盐', defaultEmission: 1.95, benchmark: 1.62 },
+      { code: '2837', name: '氰化物、氧氰化物', defaultEmission: 2.55, benchmark: 2.12 },
+      { code: '2839', name: '其他金属酸盐及过金属酸盐', defaultEmission: 2.75, benchmark: 2.28 },
+      { code: '2840', name: '硼酸盐、过硼酸盐', defaultEmission: 2.35, benchmark: 1.95 },
+      { code: '2841', name: '金属酸盐及过金属酸盐', defaultEmission: 2.65, benchmark: 2.18 },
+      { code: '2842', name: '其他无机酸盐及过氧酸盐', defaultEmission: 2.45, benchmark: 2.02 },
+      { code: '2843', name: '胶态贵金属', defaultEmission: 3.25, benchmark: 2.68 },
+      { code: '2844', name: '贵金属化合物', defaultEmission: 3.55, benchmark: 2.92 },
+      { code: '2845', name: '同位素及其化合物', defaultEmission: 4.25, benchmark: 3.52 },
+      { code: '2846', name: '稀土金属、钇、钪及其混合物', defaultEmission: 5.85, benchmark: 4.82 },
+      { code: '2847', name: '过氧化氢', defaultEmission: 2.85, benchmark: 2.35 },
+      { code: '2848', name: '磷化物', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '2849', name: '碳化物', defaultEmission: 2.45, benchmark: 2.02 },
+      { code: '2850', name: '氢化物、氮化物等', defaultEmission: 2.65, benchmark: 2.18 },
+      { code: '2852', name: '汞的无机或有机化合物', defaultEmission: 3.15, benchmark: 2.62 },
+      { code: '2853', name: '其他无机化合物', defaultEmission: 2.35, benchmark: 1.95 },
+      { code: '3101', name: '动物或植物肥料', defaultEmission: 0.85, benchmark: 0.68 },
+      { code: '3102', name: '矿物氮肥及化学氮肥', defaultEmission: 2.45, benchmark: 2.02 },
+      { code: '3103', name: '矿物磷肥及化学磷肥', defaultEmission: 1.95, benchmark: 1.62 },
+      { code: '3104', name: '矿物钾肥及化学钾肥', defaultEmission: 1.65, benchmark: 1.35 },
+      { code: '3105', name: '含氮、磷、钾中两种或三种肥效元素的矿物肥料或化学肥料', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '3106', name: '其他肥料', defaultEmission: 1.45, benchmark: 1.18 },
+      { code: '3201', name: '鞣料浸膏及染料浸膏', defaultEmission: 1.25, benchmark: 1.02 },
+      { code: '3202', name: '植物鞣料浸膏', defaultEmission: 1.15, benchmark: 0.92 },
+      { code: '3203', name: '动植物质着色料', defaultEmission: 1.35, benchmark: 1.08 },
+      { code: '3204', name: '有机合成着色料', defaultEmission: 2.55, benchmark: 2.12 },
+      { code: '3205', name: '色淀', defaultEmission: 2.35, benchmark: 1.95 },
+      { code: '3206', name: '其他着色料', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '3207', name: '陶瓷、搪瓷及玻璃工业用的调制颜料等', defaultEmission: 1.85, benchmark: 1.52 },
+      { code: '3208', name: '分散或溶于非水介质的油漆及清漆等', defaultEmission: 2.25, benchmark: 1.85 },
+      { code: '3209', name: '分散或溶于水介质的油漆及清漆等', defaultEmission: 2.05, benchmark: 1.68 },
+      { code: '3210', name: '其他油漆及清漆', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '3211', name: '配制的催干剂', defaultEmission: 2.45, benchmark: 2.02 },
+      { code: '3212', name: '制造油漆用的颜料', defaultEmission: 2.05, benchmark: 1.68 },
+      { code: '3213', name: '艺术家、学生和广告美工用的颜料等', defaultEmission: 1.95, benchmark: 1.62 },
+      { code: '3214', name: '安装玻璃用油灰、接缝用油灰等', defaultEmission: 1.75, benchmark: 1.42 },
+      { code: '3215', name: '印刷油墨、书写或绘图墨水等', defaultEmission: 1.85, benchmark: 1.52 },
+      { code: '3401', name: '肥皂、有机表面活性剂等', defaultEmission: 1.45, benchmark: 1.18 },
+      { code: '3402', name: '有机表面活性剂', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '3403', name: '润滑剂、纺织材料等用制剂', defaultEmission: 1.65, benchmark: 1.35 },
+      { code: '3404', name: '人造蜡及调制蜡', defaultEmission: 1.55, benchmark: 1.25 },
+      { code: '3405', name: '鞋靴、家具、地板等用的上光剂及类似制品', defaultEmission: 1.35, benchmark: 1.08 },
+      { code: '3406', name: '各种蜡烛及类似品', defaultEmission: 1.25, benchmark: 1.02 },
+      { code: '3407', name: '塑型用膏、牙科用蜡等', defaultEmission: 1.45, benchmark: 1.18 },
+      { code: '3501', name: '酪蛋白、酪蛋白酸盐及其他酪蛋白衍生物', defaultEmission: 1.35, benchmark: 1.08 },
+      { code: '3502', name: '白蛋白', defaultEmission: 1.25, benchmark: 1.02 },
+      { code: '3503', name: '明胶及其衍生物', defaultEmission: 1.15, benchmark: 0.92 },
+      { code: '3504', name: '蛋白胨及其衍生物', defaultEmission: 1.45, benchmark: 1.18 },
+      { code: '3505', name: '糊精及其他改性淀粉', defaultEmission: 1.05, benchmark: 0.82 },
+      { code: '3506', name: '其他调制胶及粘合剂', defaultEmission: 1.55, benchmark: 1.25 },
+      { code: '3507', name: '酶、酶制品', defaultEmission: 1.35, benchmark: 1.08 },
+      { code: '3801', name: '人造石墨', defaultEmission: 2.85, benchmark: 2.35 },
+      { code: '3802', name: '活性碳', defaultEmission: 3.25, benchmark: 2.68 },
+      { code: '3803', name: '妥尔油', defaultEmission: 1.65, benchmark: 1.35 },
+      { code: '3804', name: '木浆残余碱液', defaultEmission: 1.45, benchmark: 1.18 },
+      { code: '3805', name: '脂松节油、木松节油和硫酸盐松节油', defaultEmission: 1.25, benchmark: 1.02 },
+      { code: '3806', name: '松香和树脂酸及其衍生物', defaultEmission: 1.35, benchmark: 1.08 },
+      { code: '3807', name: '木焦油、精制木焦油、木杂酚油、粗木精等', defaultEmission: 1.85, benchmark: 1.52 },
+      { code: '3808', name: '杀虫剂、杀鼠剂、杀菌剂等', defaultEmission: 2.45, benchmark: 2.02 },
+      { code: '3809', name: '纺织、造纸、制革等工业用的调制助剂', defaultEmission: 1.55, benchmark: 1.25 },
+      { code: '3810', name: '金属表面酸洗剂、焊接用的焊剂等', defaultEmission: 1.75, benchmark: 1.42 },
+      { code: '3811', name: '抗震剂、抗氧剂等', defaultEmission: 1.95, benchmark: 1.62 },
+      { code: '3812', name: '配制的橡胶促进剂', defaultEmission: 2.15, benchmark: 1.78 },
+      { code: '3813', name: '灭火器的装配药、已装药的灭火弹', defaultEmission: 1.65, benchmark: 1.35 },
+      { code: '3814', name: '其他有机复合溶剂及稀释剂', defaultEmission: 1.85, benchmark: 1.52 },
+      { code: '3815', name: '其他反应引发剂、反应促进剂、催化剂', defaultEmission: 2.25, benchmark: 1.85 },
+      { code: '3816', name: '耐火水泥、灰泥、混凝土及类似耐火材料', defaultEmission: 1.45, benchmark: 1.18 },
+      { code: '3817', name: '混合烷基苯及混合烷基萘', defaultEmission: 2.05, benchmark: 1.68 },
+      { code: '3818', name: '经掺杂用于电子工业的化学元素', defaultEmission: 3.85, benchmark: 3.18 },
+      { code: '3819', name: '液压传动用液体', defaultEmission: 1.55, benchmark: 1.25 },
+      { code: '3820', name: '防冻剂及解冻剂', defaultEmission: 1.45, benchmark: 1.18 },
+      { code: '3821', name: '制成的供微生物培养用的培养基', defaultEmission: 1.25, benchmark: 1.02 },
+      { code: '3822', name: '附于衬背上的诊断或实验用试剂', defaultEmission: 1.65, benchmark: 1.35 },
+      { code: '3823', name: '工业用单羧脂肪酸', defaultEmission: 1.85, benchmark: 1.52 },
+      { code: '3824', name: '铸模及铸芯用粘合剂', defaultEmission: 1.35, benchmark: 1.08 },
+      { code: '3825', name: '城市垃圾、下水道淤泥等', defaultEmission: 0.95, benchmark: 0.75 },
+      { code: '3826', name: '生物柴油及其混合物', defaultEmission: 0.65, benchmark: 0.52 }
+    ];
+
+    // 碳价数据（近7周）
+    const carbonPrices = [72.35, 74.18, 75.62, 76.45, 77.28, 78.15, 78.45];
+    let selectedProduct = null;
+    let calcMethod = 'default';
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('exportDate').valueAsDate = new Date();
+      renderPriceChart();
+      loadHistory();
+      setupSearch();
+    });
+
+    // 切换页面
+    function switchPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`page-${page}`).classList.add('active');
+      event.target.closest('.nav-item').classList.add('active');
+      
+      if (page === 'history') loadHistory();
+    }
+
+    // 设置计算方式
+    function setCalcMethod(method) {
+      calcMethod = method;
+      document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === method);
+      });
+      document.getElementById('defaultFields').style.display = method === 'default' ? 'block' : 'none';
+      document.getElementById('actualFields').style.display = method === 'actual' ? 'block' : 'none';
+    }
+
+    // 设置搜索
+    function setupSearch() {
+      const cnInput = document.getElementById('cnCode');
+      const resultsDiv = document.getElementById('productResults');
+      
+      cnInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        if (query.length < 2) {
+          resultsDiv.innerHTML = '';
+          return;
+        }
+        
+        const matches = cbamProducts.filter(p => 
+          p.code.startsWith(query) || 
+          p.name.includes(query)
+        ).slice(0, 5);
+        
+        resultsDiv.innerHTML = matches.map(p => `
+          <div class="product-item ${selectedProduct?.code === p.code ? 'selected' : ''}" onclick="selectProduct('${p.code}')">
+            <div class="product-code">${p.code}</div>
+            <div class="product-name">${p.name}</div>
+          </div>
+        `).join('');
+      });
+
+      // 产品查询页面搜索
+      const searchInput = document.getElementById('searchCode');
+      searchInput?.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        const queryResults = document.getElementById('queryResults');
+        if (query.length < 2) {
+          queryResults.innerHTML = '';
+          return;
+        }
+        
+        const matches = cbamProducts.filter(p => 
+          p.code.startsWith(query) || 
+          p.name.includes(query)
+        );
+        
+        queryResults.innerHTML = matches.map(p => `
+          <div class="product-item">
+            <div class="product-code">${p.code} - ${p.name}</div>
+            <div style="display:flex;gap:16px;margin-top:8px;font-size:13px;color:var(--text-muted);">
+              <span>默认值: ${p.defaultEmission} tCO₂/t</span>
+              <span>基准值: ${p.benchmark} tCO₂/t</span>
+            </div>
+          </div>
+        `).join('');
+      });
+    }
+
+    // 选择产品
+    function selectProduct(code) {
+      selectedProduct = cbamProducts.find(p => p.code === code);
+      document.getElementById('cnCode').value = code;
+      document.getElementById('productResults').innerHTML = '';
+    }
+
+    // 计算碳关税
+    function calculate() {
+      if (!selectedProduct) {
+        alert('请先选择产品');
+        return;
+      }
+      
+      const quantity = parseFloat(document.getElementById('quantity').value);
+      if (!quantity || quantity <= 0) {
+        alert('请输入有效的出口数量');
+        return;
+      }
+
+      const certPrice = carbonPrices[carbonPrices.length - 1]; // 当前碳价
+      let embeddedEmission, freeAllocation;
+
+      if (calcMethod === 'default') {
+        embeddedEmission = selectedProduct.defaultEmission;
+        freeAllocation = selectedProduct.benchmark;
+      } else {
+        embeddedEmission = parseFloat(document.getElementById('embeddedEmission').value) || 0;
+        freeAllocation = parseFloat(document.getElementById('freeAllocation').value) || 0;
+      }
+
+      const carbonCost = parseFloat(document.getElementById('carbonCost').value) || 0;
+      
+      // CBAM计算公式: (隐含排放 - 免费配额) × 证书价格 - 已支付碳成本
+      const totalEmission = embeddedEmission * quantity;
+      const freeQuota = freeAllocation * quantity;
+      const taxableEmission = Math.max(0, totalEmission - freeQuota);
+      const tax = taxableEmission * certPrice - carbonCost;
+      const finalTax = Math.max(0, tax);
+
+      // 显示结果
+      document.getElementById('certPrice').textContent = `€${certPrice.toFixed(2)}/tCO₂`;
+      document.getElementById('emissionValue').textContent = `${embeddedEmission.toFixed(2)} tCO₂/t`;
+      document.getElementById('freeQuota').textContent = `${freeQuota.toFixed(2)} tCO₂`;
+      document.getElementById('totalTax').textContent = `€${finalTax.toFixed(2)}`;
+      document.getElementById('resultCard').classList.add('show');
+
+      // 保存历史记录
+      saveHistory({
+        product: selectedProduct,
+        quantity,
+        method: calcMethod,
+        tax: finalTax,
+        date: new Date().toLocaleString('zh-CN')
+      });
+    }
+
+    // 渲染碳价图表
+    function renderPriceChart() {
+      const chart = document.getElementById('priceChart');
+      const maxPrice = Math.max(...carbonPrices);
+      chart.innerHTML = carbonPrices.map((price, i) => `
+        <div class="price-bar" style="height: ${(price / maxPrice * 100)}%" data-price="€${price}"></div>
+      `).join('');
+    }
+
+    // 保存历史记录
+    function saveHistory(record) {
+      const history = JSON.parse(localStorage.getItem('cbamHistory') || '[]');
+      history.unshift(record);
+      if (history.length > 50) history.pop();
+      localStorage.setItem('cbamHistory', JSON.stringify(history));
+    }
+
+    // 加载历史记录
+    function loadHistory() {
+      const history = JSON.parse(localStorage.getItem('cbamHistory') || '[]');
+      const list = document.getElementById('historyList');
+      
+      if (history.length === 0) {
+        list.innerHTML = '<div class="empty-state">暂无计算记录</div>';
+        return;
+      }
+      
+      list.innerHTML = history.map((h, i) => `
+        <div class="history-item">
+          <div>
+            <div style="font-weight:500;">${h.product.code} - ${h.product.name}</div>
+            <div class="history-date">${h.quantity}吨 · ${h.method === 'default' ? '默认值' : '实测值'} · ${h.date}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="history-amount">€${h.tax.toFixed(2)}</span>
+            <button class="btn-delete" onclick="deleteHistory(${i})">删除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 删除历史记录
+    function deleteHistory(index) {
+      const history = JSON.parse(localStorage.getItem('cbamHistory') || '[]');
+      history.splice(index, 1);
+      localStorage.setItem('cbamHistory', JSON.stringify(history));
+      loadHistory();
+    }
+  </script>
+</body>
+</html>
