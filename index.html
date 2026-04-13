@@ -490,6 +490,8 @@
 
     <button class="btn-calculate" onclick="calculate()">计算碳关税</button>
 
+    <div id="toastMsg" style="display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#EF4444;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3)"></div>
+
     <div class="card result-card" id="resultCard">
       <div class="card-title">计算结果</div>
       <div class="result-item">
@@ -950,16 +952,25 @@
       }
     }
 
+    // 页面内 toast 提示，替代 alert
+    function showToast(msg) {
+      const el = document.getElementById('toastMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => { el.style.display = 'none'; }, 2500);
+    }
+
     // 计算碳关税
     function calculate() {
       if (!selectedProduct) {
-        alert('请先选择产品');
+        showToast('请先选择产品');
         return;
       }
       
       const quantity = parseFloat(document.getElementById('quantity').value);
       if (!quantity || quantity <= 0) {
-        alert('请输入有效的出口数量');
+        showToast('请输入有效的出口数量');
         return;
       }
 
