@@ -883,8 +883,7 @@
         }
         
         const matches = cbamProducts.filter(p => 
-          p.code.replace(/\s/g, '').startsWith(query.replace(/\s/g, '')) ||
-          p.code.startsWith(query)
+          p.code.replace(/\s/g, '') === query.replace(/\s/g, '')
         ).slice(0, 10);
         
         resultsDiv.innerHTML = matches.map(p => `
