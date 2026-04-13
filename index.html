@@ -352,6 +352,27 @@
       color: var(--text-muted);
       margin-top: 4px;
     }
+
+    /* 移动端适配 */
+    @media (max-width: 480px) {
+      .header h1 { font-size: 22px; }
+      .header { padding: 16px 0 24px; }
+      .card { padding: 16px; }
+      .row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+      .row .form-group:first-child { margin-bottom: 0; }
+      .result-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      .result-value { font-size: 20px; }
+      .bottom-nav { padding: 10px 0; }
+      .bottom-nav a { font-size: 11px; }
+      .bottom-nav a svg { width: 20px; height: 20px; }
+    }
   </style>
 </head>
 <body>
