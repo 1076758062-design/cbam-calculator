@@ -477,12 +477,13 @@
 
       <div id="actualFields" style="display: none;">
         <div class="form-group">
-          <label>隐含碳排放（吨CO₂）</label>
-          <input type="number" id="embeddedEmission" placeholder="如：85">
+          <label>隐含碳排放（tCO₂/t）</label>
+          <input type="number" id="embeddedEmission" placeholder="如：1.5">
         </div>
         <div class="form-group">
-          <label>累计前体配额（吨CO₂）</label>
-          <input type="number" id="freeAllocation" placeholder="如：20">
+          <label>免费配额基准值（tCO₂/t）</label>
+          <input type="number" id="freeAllocation" placeholder="自动匹配，可手动覆盖" id="freeAllocation">
+          <div class="helper-text" id="freeAllocHelper">选择产品后自动填入 benchmark × 年度系数</div>
         </div>
       </div>
     </div>
@@ -843,6 +844,10 @@
       renderPriceChart();
       loadHistory();
       setupSearch();
+      // 出口日期变化时重新计算免费配额
+      document.getElementById('exportDate').addEventListener('change', () => {
+        if (selectedProduct) selectProduct(selectedProduct.code);
+      });
     });
 
     // 切换页面
@@ -922,6 +927,21 @@
       selectedProduct = cbamProducts.find(p => p.code === code);
       document.getElementById('cnCode').value = code;
       document.getElementById('productResults').innerHTML = '';
+
+      // 自动填充免费配额（实测值模式下）
+      if (selectedProduct && selectedProduct.benchmark !== null) {
+        const exportDate = document.getElementById('exportDate').value;
+        const year = exportDate ? new Date(exportDate).getFullYear() : new Date().getFullYear();
+        const cbamFactors = { 2026: 0.975, 2027: 0.95, 2028: 0.90, 2029: 0.775, 2030: 0.515 };
+        const factor = cbamFactors[year] ?? 0.975;
+        const autoFree = (selectedProduct.benchmark * factor).toFixed(4);
+        const freeInput = document.getElementById('freeAllocation');
+        if (freeInput) {
+          freeInput.value = autoFree;
+          document.getElementById('freeAllocHelper').textContent =
+            `已自动填入：${selectedProduct.benchmark} × ${(factor*100).toFixed(1)}% = ${autoFree} tCO₂/t`;
+        }
+      }
     }
 
     // 计算碳关税
