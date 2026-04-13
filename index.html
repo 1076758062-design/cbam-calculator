@@ -883,9 +883,9 @@
         }
         
         const matches = cbamProducts.filter(p => 
-          p.code.startsWith(query) || 
-          p.name.includes(query)
-        ).slice(0, 5);
+          p.code.replace(/\s/g, '').startsWith(query.replace(/\s/g, '')) ||
+          p.code.startsWith(query)
+        ).slice(0, 10);
         
         resultsDiv.innerHTML = matches.map(p => `
           <div class="product-item ${selectedProduct?.code === p.code ? 'selected' : ''}" onclick="selectProduct('${p.code}')">
