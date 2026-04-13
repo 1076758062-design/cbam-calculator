@@ -938,6 +938,12 @@
       }
 
       const certPrice = carbonPrices[carbonPrices.length - 1]; // 当前碳价
+
+      // 年度系数（CBAM Factor）：2026=97.5%, 2027=95%, 2028=90%, 2029=77.5%, 2030=51.5%
+      const exportYear = new Date(document.getElementById('exportDate').value || Date.now()).getFullYear();
+      const cbamFactors = { 2026: 0.975, 2027: 0.95, 2028: 0.90, 2029: 0.775, 2030: 0.515 };
+      const cbamFactor = cbamFactors[exportYear] ?? 0.975;
+
       let embeddedEmission, freeAllocation;
 
       if (calcMethod === 'default') {
@@ -950,9 +956,9 @@
 
       const carbonCost = parseFloat(document.getElementById('carbonCost').value) || 0;
       
-      // CBAM计算公式: (隐含排放 - 免费配额) × 证书价格 - 已支付碳成本
+      // CBAM计算公式: (隐含排放×数量 - 免费配额×数量×年度系数) × 证书价格 - 已支付碳成本
       const totalEmission = embeddedEmission * quantity;
-      const freeQuota = freeAllocation * quantity;
+      const freeQuota = freeAllocation * quantity * cbamFactor;
       const taxableEmission = Math.max(0, totalEmission - freeQuota);
       const tax = taxableEmission * certPrice - carbonCost;
       const finalTax = Math.max(0, tax);
@@ -960,7 +966,7 @@
       // 显示结果
       document.getElementById('certPrice').textContent = `€${certPrice.toFixed(2)}/tCO₂`;
       document.getElementById('emissionValue').textContent = `${embeddedEmission.toFixed(2)} tCO₂/t`;
-      document.getElementById('freeQuota').textContent = `${freeQuota.toFixed(2)} tCO₂`;
+      document.getElementById('freeQuota').textContent = `${freeQuota.toFixed(2)} tCO₂（系数${(cbamFactor*100).toFixed(1)}%）`;
       document.getElementById('totalTax').textContent = `€${finalTax.toFixed(2)}`;
       document.getElementById('resultCard').classList.add('show');
 
